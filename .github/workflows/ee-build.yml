@@ -24,6 +24,20 @@ jobs:
       - name: Record build image ID
         run: docker image inspect awx-ee-dev:ci --format '{{.Id}}'
 
+      - name: Check Python runtime and Receptor Go provenance
+        run: |
+          mkdir -p security-evidence
+          docker run --rm --entrypoint /bin/sh awx-ee-dev:ci -c '
+            set -eu
+            /usr/bin/python3.12 -m pip check
+            /usr/bin/python3.12 -c "import importlib.metadata as m; expected={\"cryptography\":\"50.0.0\",\"msgpack\":\"1.2.1\",\"urllib3\":\"2.8.0\"}; assert all(m.version(k)==v for k,v in expected.items()); assert tuple(map(int,m.version(\"setuptools\").split(\".\")[:3])) >= (78,1,1)"
+            test -x /usr/bin/receptor
+          '
+          cid=$(docker create --entrypoint /bin/sh awx-ee-dev:ci)
+          docker cp "$cid:/usr/bin/receptor" security-evidence/receptor
+          docker rm "$cid"
+          go version -m security-evidence/receptor | tee security-evidence/receptor-go-build-info.txt
+          test -s security-evidence/receptor-go-build-info.txt
       - name: Scan built image with Trivy (read-only, no publishing)
         run: |
           mkdir -p trivy-reports
@@ -61,6 +75,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: awx-ee-trivy-report
-          path: trivy-reports/awx-ee-trivy.json
+          path: |
+            trivy-reports/awx-ee-trivy.json
+            security-evidence/receptor-go-build-info.txt
           if-no-files-found: warn
           retention-days: 30
