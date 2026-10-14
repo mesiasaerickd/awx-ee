@@ -30,3 +30,8 @@ Se verificó `execution-environment.yml`: base CentOS Stream 9 y Python 3.12, An
 - 2026-10-13: se agregó el workflow de GitHub Actions para compilación de imagen en `dev`, sin despliegue ni publicación al registro. Estado: ejecución y validación pendientes; fallo de build no autoriza cambios automáticos a `prd`.
 
 - 2026-10-13: se extendió GitHub Actions para escanear la imagen compilada con Trivy 0.75.0 (CRITICAL y HIGH), generar un JSON y subirlo como artifact durante 30 días. Los hallazgos no bloquean todavía el build: se requiere establecer baseline, validar límites de cobertura y definir umbrales antes de habilitar gates. Sin push de imágenes ni modificaciones en `prd`.
+
+## Verificación de CI y seguridad — 2026-10-13
+Run 38493349345: build y Trivy completados. CRITICAL=0, HIGH=23. Artifact `awx-ee-trivy-report`, ID 11862647899. Trivy advierte sobre SBOM de terceros y falta de cobertura OS CentOS Stream 9.
+
+Decisión: mantener `prd` sin cambios; no publicar a GHCR hasta identificar CVE remanentes, comprobar cobertura OS y validar la integración Kubernetes. La ejecución de Trivy exitosa significa que el escáner pudo correr, no que no existan vulnerabilidades.
