@@ -47,3 +47,9 @@ Decisión: mantener `prd` sin cambios; no publicar a GHCR hasta identificar CVE 
 - Los runs #38652531639, #38652548050 y #38652568186 terminaron con fallo en `Build execution environment without publishing`. El log de #38652568186 confirma que `msal 1.33.0b1` requiere `cryptography<48` y `pyopenssl 26.2.0` requiere `cryptography<49`, incompatibles con la actualización propuesta a `cryptography 50.0.0`. La compilación se detuvo por `pip check`, evitando publicar una imagen con dependencias rotas.
 - Se revisaron versiones publicadas en PyPI y la documentación de pyOpenSSL 26.4.0, que admite `cryptography 50.x`. Se añadió `msal==1.39.0` y `pyOpenSSL==26.4.0` a la instalación final junto a los parches Python. La compatibilidad real de MSAL debe ser demostrada por `pip check` en CI, no asumida.
 - El cambio está solo en dev y requiere ejecución verde del build, extracción Receptor y nuevo Trivy antes de afirmar disminución de HIGH. Sin cambios en prd, devel, GHCR ni Kubernetes.
+
+## Conflicto Azure CLI y reversión de cryptography — 2026-10-14
+- Run #38654287609 FAILED: `azure-cli-core 2.75.0` requiere exactamente `msal==1.33.0b1`, incompatible con el intento `msal==1.39.0`; esta versión anterior de MSAL restringe cryptography, por lo que no se puede forzar cryptography 50 sin rehacer la cadena Azure CLI.
+- Se conservan `msal` y `cryptography` originales del EE; se mantiene actualización de `msgpack==1.2.1`, `setuptools>=78.1.1`, `urllib3==2.8.0` y `pip check`, y se retiró la aserción incompatible de cryptography 50.
+- Compromiso explícito: la corrección de los 3 HIGH en cryptography se pospone hasta tratar Azure CLI/MSAL/pyOpenSSL de forma compatible. Esta revisión se debe validar con build y Trivy; no afirmar reducción aún.
+- Solo dev; nada publicado a GHCR ni desplegado a Kubernetes.
