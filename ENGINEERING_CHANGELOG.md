@@ -53,3 +53,8 @@ Decisión: mantener `prd` sin cambios; no publicar a GHCR hasta identificar CVE 
 - Se conservan `msal` y `cryptography` originales del EE; se mantiene actualización de `msgpack==1.2.1`, `setuptools>=78.1.1`, `urllib3==2.8.0` y `pip check`, y se retiró la aserción incompatible de cryptography 50.
 - Compromiso explícito: la corrección de los 3 HIGH en cryptography se pospone hasta tratar Azure CLI/MSAL/pyOpenSSL de forma compatible. Esta revisión se debe validar con build y Trivy; no afirmar reducción aún.
 - Solo dev; nada publicado a GHCR ni desplegado a Kubernetes.
+
+## Build EE restaurado; Trivy no disminuye — 2026-10-14
+- Ejecución #38655445281: SUCCESS, build de imagen y `pip check` validados. Artifact `awx-ee-trivy-report` 11937036756.
+- Logs: Receptor sigue con `go1.26.7 (Red Hat 1.26.7-2.el9_8)`; Trivy `CRITICAL=0`, `HIGH=23`. No afirmar que las 7 HIGH Python se mitigaron basándose solo en un build verde; revisar contenido JSON de la nueva imagen y versiones/ubicaciones efectivas de paquetes antes de otro cambio.
+- Siguiente bloque: reconstrucción de Receptor Go a partir de código y dependencias compatibles, sin publicación a GHCR ni cambios en prd o Kubernetes.
