@@ -58,3 +58,10 @@ Decisión: mantener `prd` sin cambios; no publicar a GHCR hasta identificar CVE 
 - Ejecución #38655445281: SUCCESS, build de imagen y `pip check` validados. Artifact `awx-ee-trivy-report` 11937036756.
 - Logs: Receptor sigue con `go1.26.7 (Red Hat 1.26.7-2.el9_8)`; Trivy `CRITICAL=0`, `HIGH=23`. No afirmar que las 7 HIGH Python se mitigaron basándose solo en un build verde; revisar contenido JSON de la nueva imagen y versiones/ubicaciones efectivas de paquetes antes de otro cambio.
 - Siguiente bloque: reconstrucción de Receptor Go a partir de código y dependencias compatibles, sin publicación a GHCR ni cambios en prd o Kubernetes.
+
+## Candidato de mitigación Receptor Go — 2026-10-14
+- Se creó `Dockerfile.receptor`: reconstruye `/out/receptor` desde `ansible/receptor` rama devel en commit anclado `8a95593179b27454b7e46629e91c59d9a73a9620`, con compilador `golang:1.26.9`, módulos `golang.org/x/crypto@v0.55.0`, `x/net@v0.60.0`, `x/text@v0.42.0`, `go mod tidy` y `CGO_ENABLED=0`.
+- `execution-environment.yml` reemplaza el COPY del ejecutable Receptor heredado de `quay.io/ansible/receptor:devel` por un COPY de la imagen temporal local `awx-ee-receptor-patched:ci`. Se mantienen el resto de dependencias y correcciones Python existentes.
+- El workflow `.github/workflows/ee-build.yml` compila esa imagen temporal primero, comprueba versión del ejecutable y posteriormente construye EE, ejecuta pip check, inventario Go y Trivy. No publica la imagen temporal ni EE a un registro.
+- Candidato aún SIN validar: no afirmar remediación de las 16 HIGH hasta completar build y revisar Trivy. El reporte anterior sigue 0 CRITICAL / 23 HIGH, con cobertura limitada para CentOS Stream 9.
+- Exclusivamente dev; sin modificaciones en prd, devel, GHCR o Kubernetes.
