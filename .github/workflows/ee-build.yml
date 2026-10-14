@@ -23,3 +23,44 @@ jobs:
           ansible-builder build -f execution-environment.yml -t awx-ee-dev:ci --container-runtime docker
       - name: Record build image ID
         run: docker image inspect awx-ee-dev:ci --format '{{.Id}}'
+
+      - name: Scan built image with Trivy (read-only, no publishing)
+        run: |
+          mkdir -p trivy-reports
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -v "$PWD/trivy-reports:/reports" \
+            aquasec/trivy:0.75.0 image \
+            --image-src docker \
+            --scanners vuln \
+            --severity CRITICAL,HIGH \
+            --format json \
+            --output /reports/awx-ee-trivy.json \
+            awx-ee-dev:ci
+      - name: Summarize findings
+        if: always()
+        run: |
+          if [ -f trivy-reports/awx-ee-trivy.json ]; then
+            python3 - <<'PY'
+          import json, os
+          with open('trivy-reports/awx-ee-trivy.json') as f:
+              data=json.load(f)
+          counts={'CRITICAL':0,'HIGH':0}
+          for result in data.get('Results',[]):
+              for vuln in result.get('Vulnerabilities') or []:
+                  severity=vuln.get('Severity')
+                  if severity in counts: counts[severity]+=1
+          line=f"Trivy awx-ee: CRITICAL={counts['CRITICAL']}, HIGH={counts['HIGH']}"
+          print(line)
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as summary:
+              summary.write(line+'\\n')
+          PY
+          fi
+      - name: Save vulnerability evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: awx-ee-trivy-report
+          path: trivy-reports/awx-ee-trivy.json
+          if-no-files-found: warn
+          retention-days: 30
