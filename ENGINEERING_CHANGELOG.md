@@ -65,3 +65,8 @@ Decisión: mantener `prd` sin cambios; no publicar a GHCR hasta identificar CVE 
 - El workflow `.github/workflows/ee-build.yml` compila esa imagen temporal primero, comprueba versión del ejecutable y posteriormente construye EE, ejecuta pip check, inventario Go y Trivy. No publica la imagen temporal ni EE a un registro.
 - Candidato aún SIN validar: no afirmar remediación de las 16 HIGH hasta completar build y revisar Trivy. El reporte anterior sigue 0 CRITICAL / 23 HIGH, con cobertura limitada para CentOS Stream 9.
 - Exclusivamente dev; sin modificaciones en prd, devel, GHCR o Kubernetes.
+
+## Corrección de dependencia Go en Receptor — 2026-10-14
+- Run #38656843517 falló al no existir todavía la imagen local temporal que utiliza el COPY; el workflow fue corregido para compilar primero `awx-ee-receptor-patched:ci`.
+- Run #38656880686 falló en build de Receptor porque `golang.org/x/net@v0.60.0` requiere `golang.org/x/crypto@v0.57.0`, incompatible con el pin anterior 0.55.0. Se actualiza el pin a `x/crypto@v0.57.0` en `Dockerfile.receptor`.
+- Son correcciones de build exclusivamente en dev, no resultados de seguridad. Pendiente un nuevo build completo, controles Python y Trivy para confirmar reducción de CVE.
