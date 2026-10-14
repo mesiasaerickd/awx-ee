@@ -35,3 +35,10 @@ Se verificó `execution-environment.yml`: base CentOS Stream 9 y Python 3.12, An
 Run 38493349345: build y Trivy completados. CRITICAL=0, HIGH=23. Artifact `awx-ee-trivy-report`, ID 11862647899. Trivy advierte sobre SBOM de terceros y falta de cobertura OS CentOS Stream 9.
 
 Decisión: mantener `prd` sin cambios; no publicar a GHCR hasta identificar CVE remanentes, comprobar cobertura OS y validar la integración Kubernetes. La ejecución de Trivy exitosa significa que el escáner pudo correr, no que no existan vulnerabilidades.
+
+## Mitigación Python EE y trazabilidad Receptor — 2026-10-14
+- Se extrajo y examinó el JSON original del artifact `awx-ee-trivy-report` (ID 11862647899; run #38493349345). Base: 0 CRITICAL / 23 HIGH: **7 HIGH Python** y **16 HIGH Receptor (Go)**. El escáner no proporcionó cobertura fiable de vulnerabilidades del SO CentOS Stream 9.
+- Hallazgos Python en reporte: `cryptography 47.0.0` (3 HIGH; fix >=50.0.0 para la más reciente); `msgpack 1.1.2` (1 HIGH; fix 1.2.1); `setuptools 70.3.0` (1 HIGH; fix 78.1.1); `urllib3 2.7.0` (2 HIGH; fix 2.8.0).
+- `execution-environment.yml` ahora actualiza las distribuciones en imagen final a `cryptography==50.0.0`, `msgpack==1.2.1`, `setuptools>=78.1.1`, `urllib3==2.8.0` y ejecuta `pip check`; versiones y dependencias se validan en el workflow. Candidato pendiente de prueba integral; no declararlo reparado hasta nuevo Trivy.
+- Receptor: 16 HIGH embebidas en `/usr/bin/receptor`: `golang.org/x/crypto v0.51.0` (10), `x/net v0.55.0` (2), `x/text v0.37.0` (1) y Go stdlib v1.26.7 (3). Trivy refiere correcciones hasta `x/crypto v0.55.0`, `x/net v0.60.0`, `x/text v0.39.0` y Go 1.26.9. Se añade extracción de `go version -m` en CI para identificar módulos exactos antes de reconstruir el binario.
+- Cambios solo en `dev`. CI construye en local sin publicar imagen ni modificar `prd`, `devel`, GHCR o Kubernetes.
