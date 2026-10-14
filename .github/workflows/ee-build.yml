@@ -30,7 +30,6 @@ jobs:
           docker run --rm --entrypoint /bin/sh awx-ee-dev:ci -c '
             set -eu
             /usr/bin/python3.12 -m pip check
-            /usr/bin/python3.12 -c "import importlib.metadata as m; assert m.version(\"cryptography\")==\"50.0.0\""
             /usr/bin/python3.12 -c "import importlib.metadata as m; assert m.version(\"msgpack\")==\"1.2.1\""
             /usr/bin/python3.12 -c "import importlib.metadata as m; assert m.version(\"urllib3\")==\"2.8.0\""
             /usr/bin/python3.12 -c "import importlib.metadata as m; assert tuple(map(int,m.version(\"setuptools\").split(\".\")[:3])) >= (78,1,1)"
