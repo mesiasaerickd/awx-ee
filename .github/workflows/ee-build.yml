@@ -7,6 +7,7 @@ on:
       - '.github/workflows/ee-build.yml'
       - 'execution-environment.yml'
       - 'requirements.txt'
+      - 'Dockerfile.receptor'
 permissions:
   contents: read
 jobs:
@@ -17,6 +18,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install Ansible Builder
         run: python3 -m pip install --user ansible-builder
+      - name: Rebuild patched Receptor without publishing
+        run: |
+          docker build --file Dockerfile.receptor --tag awx-ee-receptor-patched:ci .
+          docker run --rm --entrypoint /out/receptor awx-ee-receptor-patched:ci --version
       - name: Build execution environment without publishing
         run: |
           export PATH="$HOME/.local/bin:$PATH"
