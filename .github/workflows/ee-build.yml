@@ -1,0 +1,25 @@
+name: AWX EE development image build
+on:
+  workflow_dispatch:
+  push:
+    branches: [dev]
+    paths:
+      - '.github/workflows/ee-build.yml'
+      - 'execution-environment.yml'
+      - 'requirements.txt'
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Ansible Builder
+        run: python3 -m pip install --user ansible-builder
+      - name: Build execution environment without publishing
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          ansible-builder build -f execution-environment.yml -t awx-ee-dev:ci --container-runtime docker
+      - name: Record build image ID
+        run: docker image inspect awx-ee-dev:ci --format '{{.Id}}'
