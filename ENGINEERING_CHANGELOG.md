@@ -117,3 +117,8 @@ Decisión: mantener `prd` sin cambios; no publicar a GHCR hasta identificar CVE 
 - Run #38667041096 SUCCESS: compilación AWX EE, pruebas básicas y `pip check` aprobados. Receptor Go 1.26.9; Azure CLI 2.91.0; MSAL 1.39.0; pyOpenSSL 26.4.0. Artifact Trivy 11942102523.
 - Trivy mantiene CRITICAL=0 / HIGH=4 después de introducir versiones corregidas de msgpack, setuptools y urllib3 en `dependencies.python`; el intento no redujo el conteo. No deben clasificarse los cuatro como corregidos ni suprimirse.
 - Siguiente investigación: identificar qué dependencia/imagen o contenido SBOM introduce la capa antigua y evaluar corrección en origen, sin ocultar resultados. Continúa pendiente integración Kubernetes. Solo dev, no publicar ni desplegar.
+
+## Rastreo de la capa SBOM heredada — 2026-10-14
+- Se añadió una etapa CI en `dev` que registra las capas RootFS (`docker image inspect`), historial de construcción (`docker history --no-trunc`), etiquetas OCI y posibles ficheros SBOM. Estos datos se guardan junto al JSON Trivy en el artefacto de evidencia.
+- Objetivo: atribuir los 4 HIGH asociados por Trivy a la capa sha256:c077b26c7a36898cb8786665578d2c08674344de0f378ef7545ee0ef3194a765; no eliminar paquetes, ocultar hallazgos, modificar controles de regresión ni aceptar supuestamente 0 HIGH sin evidencia.
+- Etapa de diagnóstico pendiente de validar. No se cambian `prd`, GHCR ni Kubernetes.
