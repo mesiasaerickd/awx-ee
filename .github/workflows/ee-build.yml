@@ -89,6 +89,28 @@ jobs:
           p=pathlib.Path('security-evidence/ansible-builder-Dockerfile')
           print('Generated Dockerfile:',p.exists(),'bytes:',p.stat().st_size if p.exists() else 0)
           PY
+      - name: Inspect embedded package SBOM provenance
+        run: |
+          mkdir -p security-evidence
+          docker run --rm --entrypoint /bin/sh awx-ee-dev:ci -c '
+            /usr/bin/python3.12 - <<"PY"
+          import json
+          from pathlib import Path
+          roots = [Path("/usr/local/lib64/python3.12/site-packages"), Path("/usr/local/lib/python3.12/site-packages")]
+          for root in roots:
+              for path in sorted(root.glob("*.dist-info/sboms/*.json")):
+                  try:
+                      raw=path.read_text()
+                      refs={name: (f"pkg:pypi/{name}@" in raw or f"\"name\": \"{name}\"" in raw) for name in ("msgpack","setuptools","urllib3")}
+                      print(json.dumps({"sbom":str(path),"bytes":len(raw),"matches":refs}))
+                      for name in refs:
+                          import re
+                          matches=sorted(set(re.findall(r"pkg:pypi/"+name+r"@[^\\\" ,}]+",raw)))
+                          print(json.dumps({"sbom":str(path),"package":name,"purls":matches[:15]}))
+                  except Exception as exc:
+                      print(str(path),str(exc))
+          PY
+          ' | tee security-evidence/embedded-sbom-provenance.txt
       - name: Scan built image with Trivy (read-only, no publishing)
         run: |
           mkdir -p trivy-reports
@@ -138,5 +160,6 @@ jobs:
             security-evidence/ansible-builder-Dockerfile
             security-evidence/builder-stages.txt
             security-evidence/image-history-raw.txt
+            security-evidence/embedded-sbom-provenance.txt
           if-no-files-found: warn
           retention-days: 30
