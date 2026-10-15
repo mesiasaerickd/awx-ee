@@ -93,3 +93,8 @@ Decisión: mantener `prd` sin cambios; no publicar a GHCR hasta identificar CVE 
 - Runtime confirmado: azure-cli 2.91.0, msal 1.39.0, pyOpenSSL 26.4.0, cryptography 50.0.0, msgpack 1.2.1, setuptools 84.0.0, urllib3 2.8.0.
 - Trivy: CRITICAL=0 y HIGH=4, desde baseline 23 HIGH. Los cuatro hallazgos residuales todavía requieren clasificación mediante el JSON; no silenciarlos ni declararlos corregidos sin evidencia.
 - La imagen solo se construyó en CI, no se publicó ni probó en Kubernetes; dev exclusivamente.
+
+## Cierre parcial residual SBOM y prevención de regresiones — 2026-10-14
+- Se analizó el JSON original Trivy del run #38661640290, artifact 11939447819. Las cuatro HIGH son GHSA-6v7p-g79w-8964 (msgpack 1.1.2), CVE-2025-47273 (setuptools 70.3.0), CVE-2026-97687 y CVE-2026-97689 (urllib3 2.7.0). Estos elementos figuran en `Results[].Packages` con `AnalyzedBy=sbom`, sin `FilePath`, todos en la capa `sha256:c077b26c7a36898cb8786665578d2c08674344de0f378ef7545ee0ef3194a765`. En el mismo informe hay entradas `AnalyzedBy=python-pkg` de versiones actualizadas en rutas reales: msgpack 1.2.1, setuptools 84.0.0, urllib3 2.8.0. No se interpreta esto como prueba de ausencia total de código vulnerable en cada capa, y las cuatro HIGH se mantienen contadas.
+- Se añaden smoke tests de `ansible --version`, `ansible-runner --version`, `az version`, `receptor --version` y `pip check` sobre imagen construida, además de gate de regresión Trivy: fallo cuando CRITICAL > 0 o HIGH > 4. No se excluyen findings ni se manipula SBOM. Gate de baseline no implica cero vulnerabilidades.
+- Requiere CI verde antes de promover nada; faltan además pruebas de integración real en Kubernetes y cobertura del SO CentOS Stream 9.
