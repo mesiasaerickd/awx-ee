@@ -76,3 +76,9 @@ Decisión: mantener `prd` sin cambios; no publicar a GHCR hasta identificar CVE 
 - Los logs confirman Receptor con Go 1.26.9 y módulos `golang.org/x/crypto 0.57.0`, `x/net 0.60.0`, `x/text 0.42.0`.
 - Trivy confirma CRITICAL=0 y HIGH=7, reducidos desde 23 HIGH; 16 hallazgos menos tras reconstruir Receptor. La cobertura del SO CentOS Stream 9 sigue siendo limitada. Las 7 HIGH deben investigarse con el JSON nuevo, sin asumir que todas son cryptography.
 - La imagen fue compilada únicamente en CI sin publicación; no se ha validado el despliegue en Kubernetes ni promovido a prd.
+
+## Investigación de las 7 HIGH Python residuales — 2026-10-14
+- Se leyó el JSON real del artefacto 11938115432, run #38656969887. Trivy identifica exclusivamente 7 HIGH en `Python (python-pkg)`: cryptography 47.0.0 (3), msgpack 1.1.2 (1), setuptools 70.3.0 (1), urllib3 2.7.0 (2). No son hallazgos Go del Receptor.
+- El build había aprobado comprobaciones Python de versiones más nuevas, lo que sugiere instalaciones o metadatos duplicados; **esa hipótesis aún debe comprobarse**. No se deben suprimir entradas del reporte ni borrar metadatos antes de determinar cuál versión se importa o es utilizada por la imagen.
+- Se agregó al workflow de dev una etapa de diagnóstico de distribuciones Python (`importlib.metadata`, `sys.path` y búsqueda de `dist-info` en la imagen final) antes de Trivy. Tras examinar la salida se decidirá corrección de duplicados sin ocultar vulnerabilidades.
+- No se ha publicado imagen ni promovido a prd o Kubernetes.
