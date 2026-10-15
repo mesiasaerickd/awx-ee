@@ -132,3 +132,8 @@ Decisión: mantener `prd` sin cambios; no publicar a GHCR hasta identificar CVE 
 - Run #38669897567 SUCCESS, pruebas básicas y `pip check` aprobadas; versiones verificadas Azure CLI 2.91.0, MSAL 1.39.0, pyOpenSSL 26.4.0 y Receptor Go 1.26.9.
 - `context/Dockerfile` capturado exitosamente (3361 bytes), historial de imagen, capas y Trivy disponibles en artifact 11943827288. Trivy informa CRITICAL=0 y HIGH=4, sin cambios.
 - La atribución concreta de los cuatro metadatos SBOM a una instrucción o stage todavía necesita inspección detallada del Dockerfile/artefacto. No declarar mitigación ni cero hallazgos por esta captura. Solo dev; sin cambios productivos.
+
+## Inspección forense del SBOM embebido — 2026-10-14
+- Inspección del ZIP real GitHub Actions artifact 11943827288, `trivy-reports/awx-ee-trivy.json`: las cuatro HIGH están marcadas `AnalyzedBy=sbom`, sin FilePath, en DiffID `sha256:49b04df1247d051f6fa49b2e83169fb066411bbe88c6db8087139d59da0f81b3`: msgpack 1.1.2, setuptools 70.3.0, urllib3 2.7.0. Las versiones activas corregidas se detectan por `python-pkg` en otra capa. Los antiguos paquetes no están identificados como distribuciones Python instaladas en la capa final.
+- El mismo artefacto identifica SBOM embebidos en `cryptography-50.0.0.dist-info/sboms/`, entre otros. Se añadió un paso de diagnóstico que examina de manera de solo lectura los SBOM JSON embebidos y lista coincidencias de PURL para los tres paquetes. Esta correspondencia es una hipótesis pendiente de probar en CI, no conclusión definitiva.
+- No se borraron ni filtraron SBOM; se mantiene Trivy íntegro y gate de no regresión. Sin cambios en producción, imágenes publicadas ni prd.
