@@ -164,3 +164,8 @@ Decisión: mantener `prd` sin cambios; no publicar a GHCR hasta identificar CVE 
 - GitHub Actions #38675419951 SUCCESS: compilación, dependencias Python y controles del workflow aprobados. Runtime confirma Azure CLI 2.91.0, MSAL 1.39.0, pyOpenSSL 26.4.0, Receptor Go 1.26.9; `pip check` sin problemas.
 - Trivy reporta CRITICAL=0/HIGH=4 pese a actualizar paquetes en `append_base`. Artifact de evidencia 11946637400. Este intento no disminuyó hallazgos; queda pendiente investigación de la imagen/capa de origen y cobertura de las detecciones SBOM.
 - No se considera cero vulnerabilidades ni listo para producción. Cambios solo en dev; sin publicar ni desplegar.
+
+## Ensayo de reconstrucción con imagen base alternativa — 2026-10-14
+- Tras sucesivos ensayos de actualización de los tres paquetes Python sin reducción de 4 HIGH SBOM heredadas, se cambia en `dev` solamente la base de Ansible Builder de `quay.io/centos/centos:stream9` a `registry.access.redhat.com/ubi9/ubi:9.8`, imagen de base con soporte de proveedor. El propósito es reconstruir capas de origen y medir objetivamente si desaparecen los cuatro hallazgos.
+- Este cambio **puede fallar** por disponibilidad de repositorios/EPEL o introducir nuevas CVE de sistema RPM. Se mantiene el escaneo Trivy completo (sin exclusiones) y el gate de 0 CRITICAL y máximo 4 HIGH, además del smoke test. No se aceptará un resultado limpio sin confirmar también cobertura del SO.
+- Candidato estrictamente experimental: ninguna imagen se publica ni se despliega. Se revertirá en dev si los controles fallan o introduce regresiones.
