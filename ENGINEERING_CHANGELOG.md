@@ -142,3 +142,8 @@ Decisión: mantener `prd` sin cambios; no publicar a GHCR hasta identificar CVE 
 - Run #38671764750 SUCCESS; build, pruebas básicas, comprobación de dependencias y Trivy completados. Artifact `awx-ee-trivy-report` ID 11945275830; CRITICAL=0/HIGH=4.
 - El paso `Inspect embedded package SBOM provenance` buscó referencias a msgpack, setuptools y urllib3 en SBOM JSON de cryptography 50.0.0, pydantic_core 2.50.1 y rpds_py 2026.9.1: no encontró coincidencias ni PURL relevantes. La hipótesis de que estos SBOM concretos causaban las cuatro detecciones no se confirmó; no eliminar dichos documentos ni alterar el escaneo.
 - Pendiente atribuir las cuatro entradas `AnalyzedBy=sbom` al origen exacto en capas/metadata y decidir remediación verificable. Solo rama dev; sin despliegue/publicación.
+
+## Atribución detallada de hallazgos Trivy SBOM — 2026-10-14
+- Añadida etapa `Trace each Trivy finding to SBOM package source` en el workflow `dev`. Extrae del JSON original de Trivy por cada CVE: target, clase, tipo, PkgID, paquete/versión, layer e información `AnalyzedBy`, `FilePath` y `Identifier` de `Results[].Packages` coincidentes.
+- Evidencia preservada como `security-evidence/trivy-sbom-attribution.json` sin modificar el reporte de Trivy, sus umbrales ni los hallazgos originales. La siguiente ejecución permitirá distinguir de manera auditable metadatos SBOM versus archivos Python activos.
+- No se declara remediación de las 4 HIGH hasta contar con prueba técnica verificable; no se publican imágenes ni se cambian `prd`, GHCR ni Kubernetes.
