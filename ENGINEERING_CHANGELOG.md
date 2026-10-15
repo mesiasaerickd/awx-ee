@@ -153,3 +153,9 @@ Decisión: mantener `prd` sin cambios; no publicar a GHCR hasta identificar CVE 
 - Los cuatro comparten en **esa compilación** DiffID `sha256:f3276c9fd4de240f6f63f9041b3098ee7456388ea659895bd91094a928ff12bf`, `AnalyzedBy=sbom` y `FilePath=null`: msgpack@1.1.2 GHSA-6v7p-g79w-8964; setuptools@70.3.0 CVE-2025-47273; urllib3@2.7.0 CVE-2026-97687 y CVE-2026-97689.
 - El mismo DiffID en un build concreto no demuestra falso positivo ni identifica aún la instrucción que generó los registros. Próxima prueba: mapear la capa del build con el Dockerfile generado e identificar el originador SBOM antes de cualquier remoción o modificación. No se filtran hallazgos.
 - Solo dev; sin publicación, despliegue ni modificación de prd.
+
+## Ensayo de corrección en etapa base de Ansible Builder — 2026-10-14
+- Se abrió y analizó el artifact completo del run #38673377469 (11944884131), incluyendo JSON de Trivy, `image-layers.json`, Dockerfile generado e historial Docker. Los 4 HIGH del SBOM comparten DiffID `sha256:f3276c9fd4de240f6f63f9041b3098ee7456388ea659895bd91094a928ff12bf`, índice 7 de 22 capas RootFS (índice base cero). Esa capa es previa a las actualizaciones finales, pero el índice por sí solo no identifica de forma incontrovertible una instrucción Dockerfile.
+- Se añadió a `additional_build_steps.append_base` la actualización de `msgpack==1.2.1`, `setuptools>=78.1.1` y `urllib3==2.8.0`, más `pip check`. Se mantienen los pins en la resolución de dependencias y las verificaciones de la imagen final.
+- La intervención intenta prevenir componentes antiguos en etapas heredadas de Builder, no suprimir o ignorar CVE. Debe validarse build, controles funcionales y Trivy; si la imagen base conserva metadatos históricos, todavía puede haber 4 HIGH.
+- Cambios solo en dev; no modificar prd, GHCR ni Kubernetes.
