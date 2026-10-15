@@ -45,6 +45,13 @@ jobs:
           docker rm "$cid"
           go version -m security-evidence/receptor | tee security-evidence/receptor-go-build-info.txt
           test -s security-evidence/receptor-go-build-info.txt
+      - name: Diagnose duplicate Python package installations
+        run: |
+          docker run --rm --entrypoint /bin/sh awx-ee-dev:ci -c '
+            set -eu
+            /usr/bin/python3.12 -c "import sys,importlib.metadata as m; print(sys.path); names=(\"cryptography\",\"msgpack\",\"setuptools\",\"urllib3\"); print([(n,d.version,str(d.locate_file(\"\"))) for n in names for d in m.distributions() if d.metadata.get(\"Name\",\"\").lower().replace(\"_\",\"-\")==n])"
+            find /usr /opt -type d \( -iname "cryptography-*.dist-info" -o -iname "msgpack-*.dist-info" -o -iname "setuptools-*.dist-info" -o -iname "urllib3-*.dist-info" \) -print 2>/dev/null
+          '
       - name: Scan built image with Trivy (read-only, no publishing)
         run: |
           mkdir -p trivy-reports
