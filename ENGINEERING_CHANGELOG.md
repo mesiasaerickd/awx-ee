@@ -159,3 +159,8 @@ Decisión: mantener `prd` sin cambios; no publicar a GHCR hasta identificar CVE 
 - Se añadió a `additional_build_steps.append_base` la actualización de `msgpack==1.2.1`, `setuptools>=78.1.1` y `urllib3==2.8.0`, más `pip check`. Se mantienen los pins en la resolución de dependencias y las verificaciones de la imagen final.
 - La intervención intenta prevenir componentes antiguos en etapas heredadas de Builder, no suprimir o ignorar CVE. Debe validarse build, controles funcionales y Trivy; si la imagen base conserva metadatos históricos, todavía puede haber 4 HIGH.
 - Cambios solo en dev; no modificar prd, GHCR ni Kubernetes.
+
+## Resultado del ensayo append_base — 2026-10-14
+- GitHub Actions #38675419951 SUCCESS: compilación, dependencias Python y controles del workflow aprobados. Runtime confirma Azure CLI 2.91.0, MSAL 1.39.0, pyOpenSSL 26.4.0, Receptor Go 1.26.9; `pip check` sin problemas.
+- Trivy reporta CRITICAL=0/HIGH=4 pese a actualizar paquetes en `append_base`. Artifact de evidencia 11946637400. Este intento no disminuyó hallazgos; queda pendiente investigación de la imagen/capa de origen y cobertura de las detecciones SBOM.
+- No se considera cero vulnerabilidades ni listo para producción. Cambios solo en dev; sin publicar ni desplegar.
