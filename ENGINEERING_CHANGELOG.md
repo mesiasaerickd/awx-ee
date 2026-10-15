@@ -122,3 +122,8 @@ Decisión: mantener `prd` sin cambios; no publicar a GHCR hasta identificar CVE 
 - Se añadió una etapa CI en `dev` que registra las capas RootFS (`docker image inspect`), historial de construcción (`docker history --no-trunc`), etiquetas OCI y posibles ficheros SBOM. Estos datos se guardan junto al JSON Trivy en el artefacto de evidencia.
 - Objetivo: atribuir los 4 HIGH asociados por Trivy a la capa sha256:c077b26c7a36898cb8786665578d2c08674344de0f378ef7545ee0ef3194a765; no eliminar paquetes, ocultar hallazgos, modificar controles de regresión ni aceptar supuestamente 0 HIGH sin evidencia.
 - Etapa de diagnóstico pendiente de validar. No se cambian `prd`, GHCR ni Kubernetes.
+
+## Trazabilidad de etapas Ansible Builder — 2026-10-14
+- Se amplió el CI `dev` para guardar `context/Dockerfile` generado por Ansible Builder, relación de etapas relevantes (FROM, RUN, COPY, pip y sbom) y salida íntegra `docker history --no-trunc` sin recortes.
+- El objetivo es atribuir los 4 HIGH que Trivy asocia a SBOM heredado a una etapa concreta antes de modificar fuentes, bases o metadatos. Se mantiene Trivy íntegro, sin exclusiones ni reducción artificial de conteos.
+- Pendiente comprobar la ejecución y extraer conclusiones a partir de los artefactos. Sin modificaciones de imágenes de producción, prd, GHCR ni Kubernetes.
