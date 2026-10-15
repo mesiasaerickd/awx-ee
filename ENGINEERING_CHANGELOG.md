@@ -107,3 +107,8 @@ Decisión: mantener `prd` sin cambios; no publicar a GHCR hasta identificar CVE 
 - GitHub Actions #38664721890 SUCCESS, build y smoke tests sin pasos fallidos. Ansible core 2.18.19; dependencias `pip check` sin conflictos; Azure CLI 2.91.0, MSAL 1.39.0, pyOpenSSL 26.4.0; Receptor Go 1.26.9.
 - Trivy: CRITICAL=0, HIGH=4; gate de regresión aprobado. Artifact `awx-ee-trivy-report` ID 11940444544.
 - La verificación es de CI y comandos básicos, **no** prueba funcional Kubernetes ni certificación de ausencia de vulnerabilidades. Las cuatro HIGH SBOM persisten. Sin promoción a prd, publicación de imágenes ni despliegue.
+
+## Ensayo de mitigación de 4 hallazgos SBOM residuales — 2026-10-14
+- Se inspeccionó el JSON de Trivy del artifact #11939447819. Los cuatro hallazgos remanentes pertenecen a `AnalyzedBy=sbom`, todos asociados a la misma capa antigua `sha256:c077b26c7a36898cb8786665578d2c08674344de0f378ef7545ee0ef3194a765`: msgpack 1.1.2 (GHSA-6v7p-g79w-8964), setuptools 70.3.0 (CVE-2025-47273) y urllib3 2.7.0 (CVE-2026-97687, CVE-2026-97689). Las comprobaciones del runtime muestran las versiones corregidas, pero los cuatro siguen siendo hallazgos de Trivy y no se excluyen.
+- Ensayo en dev: añadir `msgpack==1.2.1`, `setuptools>=78.1.1` y `urllib3==2.8.0` directamente a `dependencies.python` en `execution-environment.yml`, para intentar que se resuelvan antes de que Ansible Builder componga las capas y SBOM. Se mantienen comprobaciones finales y escaneo sin exclusiones.
+- No está validado que la modificación elimine el registro heredado: se requiere build exitoso, smoke tests y nuevo Trivy para determinarlo. No se ha tocado prd, GHCR ni Kubernetes.
