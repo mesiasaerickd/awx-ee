@@ -67,6 +67,17 @@ jobs:
             /usr/bin/receptor --version
             /usr/bin/python3.12 -m pip check
           '
+      - name: Attribute inherited SBOM layer
+        run: |
+          mkdir -p security-evidence
+          docker image inspect awx-ee-dev:ci --format '{{json .RootFS.Layers}}' > security-evidence/image-layers.json
+          docker history --no-trunc awx-ee-dev:ci > security-evidence/image-history.txt
+          docker image inspect awx-ee-dev:ci --format '{{json .Config.Labels}}' > security-evidence/image-labels.json
+          docker run --rm --entrypoint /bin/sh awx-ee-dev:ci -c '
+            find / -type f \( -iname "*sbom*.json" -o -iname "*sbom*.spdx" -o -iname "*cyclonedx*" \) -print 2>/dev/null || true
+          ' > security-evidence/sbom-files.txt
+          cat security-evidence/image-layers.json
+          cat security-evidence/image-labels.json
       - name: Scan built image with Trivy (read-only, no publishing)
         run: |
           mkdir -p trivy-reports
@@ -109,5 +120,9 @@ jobs:
           path: |
             trivy-reports/awx-ee-trivy.json
             security-evidence/receptor-go-build-info.txt
+            security-evidence/image-layers.json
+            security-evidence/image-history.txt
+            security-evidence/image-labels.json
+            security-evidence/sbom-files.txt
           if-no-files-found: warn
           retention-days: 30
