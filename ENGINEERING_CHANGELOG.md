@@ -87,3 +87,9 @@ Decisión: mantener `prd` sin cambios; no publicar a GHCR hasta identificar CVE 
 - Se examinó el JSON real de Trivy, artifact 11938880097 del run #38658375860. Hallazgos HIGH: 3 en cryptography 47.0.0 con ruta real `usr/local/lib64/python3.12/site-packages/...`; 1 en msgpack 1.1.2, 1 en setuptools 70.3.0 y 2 en urllib3 2.7.0, estos cuatro etiquetados `AnalyzedBy=sbom` sin FilePath, pese a que el mismo escaneo muestra metadatos actuales de msgpack 1.2.1, setuptools 84.0.0 y urllib3 2.8.0. Se conservarán los hallazgos y no se excluirá ni borrará SBOM para falsear el resultado.
 - Candidato experimental: resolver conjuntamente `azure-cli>=2.75.0`, `pyOpenSSL>=26.4.0` y `cryptography==50.0.0` mediante `pip install --upgrade`, manteniendo los pins corregidos de los otros paquetes. Se exige `pip check` y el workflow registra las versiones de Azure CLI, MSAL y pyOpenSSL y comprueba cryptography 50. No se ha verificado todavía la compatibilidad efectiva; el build debe fallar si el resolvedor no la consigue.
 - Este cambio es exclusivo de dev, sin imagen publicada o cambios en prd/Kubernetes. Tras CI exitoso se requieren pruebas funcionales de Azure y de la Execution Environment antes de promoción.
+
+## Validación Azure CLI y cryptography — 2026-10-14
+- Workflow #38661640290 SUCCESS: build EE, control `pip check`, comprobaciones de paquetes Python, Receptor Go 1.26.9 y Trivy completos. Artifact `awx-ee-trivy-report` ID 11939447819.
+- Runtime confirmado: azure-cli 2.91.0, msal 1.39.0, pyOpenSSL 26.4.0, cryptography 50.0.0, msgpack 1.2.1, setuptools 84.0.0, urllib3 2.8.0.
+- Trivy: CRITICAL=0 y HIGH=4, desde baseline 23 HIGH. Los cuatro hallazgos residuales todavía requieren clasificación mediante el JSON; no silenciarlos ni declararlos corregidos sin evidencia.
+- La imagen solo se construyó en CI, no se publicó ni probó en Kubernetes; dev exclusivamente.
