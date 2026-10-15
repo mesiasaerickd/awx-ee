@@ -102,3 +102,8 @@ Decisión: mantener `prd` sin cambios; no publicar a GHCR hasta identificar CVE 
 ## Ajuste del smoke test de Ansible — 2026-10-14
 - Run #38663680118 falló únicamente en `Smoke-test execution environment commands`: `ansible --version` intentó crear `/.ansible/tmp` y recibió Permission denied. La prueba se lanzaba con HOME no escribible en el contenedor; no se confirmó fallo del build ni incremento de CVEs.
 - Se establece `HOME=/tmp` y `ANSIBLE_LOCAL_TEMP=/tmp/ansible-local` en el smoke test y se crea su carpeta antes de invocar Ansible. Sin alterar permisos del runtime productivo. Se requiere repetir workflow completo.
+
+## Revalidación de smoke tests — 2026-10-14
+- GitHub Actions #38664721890 SUCCESS, build y smoke tests sin pasos fallidos. Ansible core 2.18.19; dependencias `pip check` sin conflictos; Azure CLI 2.91.0, MSAL 1.39.0, pyOpenSSL 26.4.0; Receptor Go 1.26.9.
+- Trivy: CRITICAL=0, HIGH=4; gate de regresión aprobado. Artifact `awx-ee-trivy-report` ID 11940444544.
+- La verificación es de CI y comandos básicos, **no** prueba funcional Kubernetes ni certificación de ausencia de vulnerabilidades. Las cuatro HIGH SBOM persisten. Sin promoción a prd, publicación de imágenes ni despliegue.
