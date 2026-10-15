@@ -127,3 +127,8 @@ Decisión: mantener `prd` sin cambios; no publicar a GHCR hasta identificar CVE 
 - Se amplió el CI `dev` para guardar `context/Dockerfile` generado por Ansible Builder, relación de etapas relevantes (FROM, RUN, COPY, pip y sbom) y salida íntegra `docker history --no-trunc` sin recortes.
 - El objetivo es atribuir los 4 HIGH que Trivy asocia a SBOM heredado a una etapa concreta antes de modificar fuentes, bases o metadatos. Se mantiene Trivy íntegro, sin exclusiones ni reducción artificial de conteos.
 - Pendiente comprobar la ejecución y extraer conclusiones a partir de los artefactos. Sin modificaciones de imágenes de producción, prd, GHCR ni Kubernetes.
+
+## Verificación de evidencia Ansible Builder — 2026-10-14
+- Run #38669897567 SUCCESS, pruebas básicas y `pip check` aprobadas; versiones verificadas Azure CLI 2.91.0, MSAL 1.39.0, pyOpenSSL 26.4.0 y Receptor Go 1.26.9.
+- `context/Dockerfile` capturado exitosamente (3361 bytes), historial de imagen, capas y Trivy disponibles en artifact 11943827288. Trivy informa CRITICAL=0 y HIGH=4, sin cambios.
+- La atribución concreta de los cuatro metadatos SBOM a una instrucción o stage todavía necesita inspección detallada del Dockerfile/artefacto. No declarar mitigación ni cero hallazgos por esta captura. Solo dev; sin cambios productivos.
