@@ -175,3 +175,8 @@ Decisión: mantener `prd` sin cambios; no publicar a GHCR hasta identificar CVE 
 - Se consolidan pruebas profundas en el mismo workflow: ejecución real de `ansible.builtin.ping` contra localhost, recolección mínima de facts, consulta `ansible-doc`, colecciones imprescindibles, Azure CLI, binario Receptor y `pip check`. Son pruebas locales de EE, no equivalen a integración Kubernetes.
 - El paso de atribución Trivy deja de generar un segundo error artificial cuando el build o escaneo no produjo JSON; el error principal del build sigue fallando el job.
 - No hay evidencia de eliminación de las cuatro HIGH `AnalyzedBy=sbom` (baseline 0 CRITICAL/4 HIGH) ni de cobertura completa OS CentOS Stream. El nuevo run debe pasar antes de afirmar estabilidad. Exclusivamente dev; sin publicación, promoción a prd o despliegue.
+
+## Resultado de validación integral consolidada — 2026-10-14
+- GitHub Actions #38677473713 y #38677444113 finalizaron SUCCESS. En #38677473713 se confirmó Ansible localhost `ping: pong`, smoke tests de EE y `pip check` sin dependencias rotas. Azure CLI 2.91.0, MSAL 1.39.0, pyOpenSSL 26.4.0 y Receptor Go 1.26.9.
+- Trivy: CRITICAL=0 y HIGH=4; artifact #11947311607. Las cuatro altas no están mitigadas y el control de baseline permite hasta 4; aprobar el workflow no implica cero HIGH.
+- Esta validación se limita a imagen compilada y ejecución local; no cubre integración con AWX/Operator en Kubernetes ni garantiza cobertura integral del SO. Sin publicación/promoción a prd, GHCR ni despliegue.
