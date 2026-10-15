@@ -54,6 +54,16 @@ jobs:
             /usr/bin/python3.12 -c "import sys,importlib.metadata as m; print(sys.path); names=(\"cryptography\",\"msgpack\",\"setuptools\",\"urllib3\"); print([(n,d.version,str(d.locate_file(\"\"))) for n in names for d in m.distributions() if d.metadata.get(\"Name\",\"\").lower().replace(\"_\",\"-\")==n])"
             find /usr /opt -type d \( -iname "cryptography-*.dist-info" -o -iname "msgpack-*.dist-info" -o -iname "setuptools-*.dist-info" -o -iname "urllib3-*.dist-info" \) -print 2>/dev/null
           '
+      - name: Smoke-test execution environment commands
+        run: |
+          docker run --rm --entrypoint /bin/sh awx-ee-dev:ci -c '
+            set -eu
+            ansible --version
+            ansible-runner --version
+            az version
+            /usr/bin/receptor --version
+            /usr/bin/python3.12 -m pip check
+          '
       - name: Scan built image with Trivy (read-only, no publishing)
         run: |
           mkdir -p trivy-reports
@@ -82,6 +92,8 @@ jobs:
                   if severity in counts: counts[severity]+=1
           line=f"Trivy awx-ee: CRITICAL={counts['CRITICAL']}, HIGH={counts['HIGH']}"
           print(line)
+          if counts['CRITICAL'] > 0 or counts['HIGH'] > 4:
+              raise SystemExit('EE vulnerability baseline regressed (limit: 0 critical, 4 high)')
           with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as summary:
               summary.write(line+'\\n')
           PY
