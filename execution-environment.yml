@@ -2,7 +2,7 @@
 version: 3
 images:
   base_image:
-    name: quay.io/centos/centos:stream9
+    name: registry.access.redhat.com/ubi9/ubi:9.8
 dependencies:
   python_interpreter:
     package_system: python3.12
