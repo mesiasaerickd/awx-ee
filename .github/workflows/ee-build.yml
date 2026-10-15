@@ -78,6 +78,17 @@ jobs:
           ' > security-evidence/sbom-files.txt
           cat security-evidence/image-layers.json
           cat security-evidence/image-labels.json
+      - name: Analyze generated Builder Dockerfile and inherited SBOM metadata
+        run: |
+          mkdir -p security-evidence
+          cp context/Dockerfile security-evidence/ansible-builder-Dockerfile
+          grep -nE 'FROM|COPY|RUN|pip|sbom|introspect' context/Dockerfile > security-evidence/builder-stages.txt || true
+          docker history --no-trunc --format '{{.ID}}|{{.CreatedBy}}' awx-ee-dev:ci > security-evidence/image-history-raw.txt
+          python3 - <<'PY'
+          import pathlib
+          p=pathlib.Path('security-evidence/ansible-builder-Dockerfile')
+          print('Generated Dockerfile:',p.exists(),'bytes:',p.stat().st_size if p.exists() else 0)
+          PY
       - name: Scan built image with Trivy (read-only, no publishing)
         run: |
           mkdir -p trivy-reports
@@ -124,5 +135,8 @@ jobs:
             security-evidence/image-history.txt
             security-evidence/image-labels.json
             security-evidence/sbom-files.txt
+            security-evidence/ansible-builder-Dockerfile
+            security-evidence/builder-stages.txt
+            security-evidence/image-history-raw.txt
           if-no-files-found: warn
           retention-days: 30
