@@ -124,6 +124,37 @@ jobs:
             --format json \
             --output /reports/awx-ee-trivy.json \
             awx-ee-dev:ci
+      - name: Trace each Trivy finding to SBOM package source
+        if: always()
+        run: |
+          mkdir -p security-evidence
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("trivy-reports/awx-ee-trivy.json")
+          if not p.exists():
+              raise SystemExit("Trivy JSON unavailable")
+          data=json.loads(p.read_text())
+          records=[]
+          for result in data.get("Results",[]):
+              packages=result.get("Packages") or []
+              for vuln in result.get("Vulnerabilities") or []:
+                  pkgid=vuln.get("PkgID","")
+                  name=vuln.get("PkgName","")
+                  ver=vuln.get("InstalledVersion","")
+                  matches=[{
+                    "ID":q.get("ID"),"Name":q.get("Name"),"Version":q.get("Version"),
+                    "FilePath":q.get("FilePath"),"AnalyzedBy":q.get("AnalyzedBy"),
+                    "Layer":q.get("Layer"),"Identifier":q.get("Identifier")
+                  } for q in packages if q.get("ID")==pkgid or (q.get("Name")==name and q.get("Version")==ver)]
+                  records.append({"target":result.get("Target"),"class":result.get("Class"),
+                    "type":result.get("Type"),"id":vuln.get("VulnerabilityID"),
+                    "package":name,"version":ver,"pkg_id":pkgid,
+                    "vuln_layer":vuln.get("Layer"),"matches":matches[:8]})
+          out=Path("security-evidence/trivy-sbom-attribution.json")
+          out.write_text(json.dumps(records,indent=2))
+          for x in records: print(json.dumps(x))
+          PY
       - name: Summarize findings
         if: always()
         run: |
@@ -161,5 +192,6 @@ jobs:
             security-evidence/builder-stages.txt
             security-evidence/image-history-raw.txt
             security-evidence/embedded-sbom-provenance.txt
+            security-evidence/trivy-sbom-attribution.json
           if-no-files-found: warn
           retention-days: 30
