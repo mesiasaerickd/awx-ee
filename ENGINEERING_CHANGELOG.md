@@ -70,3 +70,9 @@ Decisión: mantener `prd` sin cambios; no publicar a GHCR hasta identificar CVE 
 - Run #38656843517 falló al no existir todavía la imagen local temporal que utiliza el COPY; el workflow fue corregido para compilar primero `awx-ee-receptor-patched:ci`.
 - Run #38656880686 falló en build de Receptor porque `golang.org/x/net@v0.60.0` requiere `golang.org/x/crypto@v0.57.0`, incompatible con el pin anterior 0.55.0. Se actualiza el pin a `x/crypto@v0.57.0` en `Dockerfile.receptor`.
 - Son correcciones de build exclusivamente en dev, no resultados de seguridad. Pendiente un nuevo build completo, controles Python y Trivy para confirmar reducción de CVE.
+
+## Validación exitosa de Receptor reconstruido — 2026-10-14
+- GitHub Actions #38656969887: build AWX EE SUCCESS, validación Python y captura de Receptor Go SUCCESS, Trivy ejecutado y artefacto `awx-ee-trivy-report` ID 11938115432.
+- Los logs confirman Receptor con Go 1.26.9 y módulos `golang.org/x/crypto 0.57.0`, `x/net 0.60.0`, `x/text 0.42.0`.
+- Trivy confirma CRITICAL=0 y HIGH=7, reducidos desde 23 HIGH; 16 hallazgos menos tras reconstruir Receptor. La cobertura del SO CentOS Stream 9 sigue siendo limitada. Las 7 HIGH deben investigarse con el JSON nuevo, sin asumir que todas son cryptography.
+- La imagen fue compilada únicamente en CI sin publicación; no se ha validado el despliegue en Kubernetes ni promovido a prd.
