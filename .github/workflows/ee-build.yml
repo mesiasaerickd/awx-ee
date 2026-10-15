@@ -58,6 +58,9 @@ jobs:
         run: |
           docker run --rm --entrypoint /bin/sh awx-ee-dev:ci -c '
             set -eu
+            export HOME=/tmp
+            export ANSIBLE_LOCAL_TEMP=/tmp/ansible-local
+            mkdir -p "$ANSIBLE_LOCAL_TEMP"
             ansible --version
             ansible-runner --version
             az version
