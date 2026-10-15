@@ -147,3 +147,9 @@ Decisión: mantener `prd` sin cambios; no publicar a GHCR hasta identificar CVE 
 - Añadida etapa `Trace each Trivy finding to SBOM package source` en el workflow `dev`. Extrae del JSON original de Trivy por cada CVE: target, clase, tipo, PkgID, paquete/versión, layer e información `AnalyzedBy`, `FilePath` y `Identifier` de `Results[].Packages` coincidentes.
 - Evidencia preservada como `security-evidence/trivy-sbom-attribution.json` sin modificar el reporte de Trivy, sus umbrales ni los hallazgos originales. La siguiente ejecución permitirá distinguir de manera auditable metadatos SBOM versus archivos Python activos.
 - No se declara remediación de las 4 HIGH hasta contar con prueba técnica verificable; no se publican imágenes ni se cambian `prd`, GHCR ni Kubernetes.
+
+## Verificación de atribución individual SBOM — 2026-10-14
+- GitHub Actions #38673377469 SUCCESS, reporte Trivy CRITICAL=0/HIGH=4, artifact 11944884131. La etapa de atribución ejecutó correctamente y registró PkgID, PURL, AnalyzedBy, FilePath y DiffID por hallazgo.
+- Los cuatro comparten en **esa compilación** DiffID `sha256:f3276c9fd4de240f6f63f9041b3098ee7456388ea659895bd91094a928ff12bf`, `AnalyzedBy=sbom` y `FilePath=null`: msgpack@1.1.2 GHSA-6v7p-g79w-8964; setuptools@70.3.0 CVE-2025-47273; urllib3@2.7.0 CVE-2026-97687 y CVE-2026-97689.
+- El mismo DiffID en un build concreto no demuestra falso positivo ni identifica aún la instrucción que generó los registros. Próxima prueba: mapear la capa del build con el Dockerfile generado e identificar el originador SBOM antes de cualquier remoción o modificación. No se filtran hallazgos.
+- Solo dev; sin publicación, despliegue ni modificación de prd.
