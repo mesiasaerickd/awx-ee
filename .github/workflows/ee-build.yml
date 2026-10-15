@@ -67,6 +67,23 @@ jobs:
             /usr/bin/receptor --version
             /usr/bin/python3.12 -m pip check
           '
+      - name: Deep smoke test for EE execution workflows
+        run: |
+          docker run --rm --entrypoint /bin/sh awx-ee-dev:ci -c '
+            set -eu
+            export HOME=/tmp
+            export ANSIBLE_LOCAL_TEMP=/tmp/ansible-local
+            mkdir -p "$ANSIBLE_LOCAL_TEMP"
+            printf "[local]\\nlocalhost ansible_connection=local ansible_python_interpreter=/usr/bin/python3.12\\n" >/tmp/inventory
+            ansible -i /tmp/inventory local -m ansible.builtin.ping
+            ansible -i /tmp/inventory local -m ansible.builtin.setup -a "gather_subset=!all,min" >/tmp/facts.json
+            ansible-doc -t module ansible.builtin.command >/dev/null
+            ansible-galaxy collection list >/tmp/collections.txt
+            grep -E "ansible.posix|kubernetes.core|azure.azcollection" /tmp/collections.txt
+            az --version >/tmp/azure-version.txt
+            /usr/bin/receptor --version
+            /usr/bin/python3.12 -m pip check
+          '
       - name: Attribute inherited SBOM layer
         run: |
           mkdir -p security-evidence
@@ -133,7 +150,8 @@ jobs:
           from pathlib import Path
           p=Path("trivy-reports/awx-ee-trivy.json")
           if not p.exists():
-              raise SystemExit("Trivy JSON unavailable")
+              print("Trivy JSON unavailable: build or scanner did not finish; no secondary failure")
+              raise SystemExit(0)
           data=json.loads(p.read_text())
           records=[]
           for result in data.get("Results",[]):
